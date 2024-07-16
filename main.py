@@ -1,5 +1,5 @@
 from enum import Enum
-from pytube import YouTube
+from pytube import YouTube, Stream
 from pytube.exceptions import RegexMatchError
 
 # remove patch below if pytube fixed the bug
@@ -26,17 +26,17 @@ file_endings = {
 }
 
 
-def get_data_by_url(url, output_type):
+def get_data_with_url(url, output_type) -> (Stream | None):
     try:
         if output_type == OutputType.VIDEO:
             return YouTube(url).streams.first()
         else:
             return YouTube(url).streams.filter(only_audio=True).first()
-    except RegexMatchError as e:
+    except RegexMatchError:
         return None
 
 
-def parse_output_type_input(output_type):
+def output_type_from_str(output_type: str) -> OutputType:
     lowered_wo_whitespace = output_type.lower().replace(" ", "")
     if lowered_wo_whitespace in OutputType.VIDEO.value:
         return OutputType.VIDEO
@@ -45,22 +45,23 @@ def parse_output_type_input(output_type):
 
 
 def convert_video(url_input, output_type):
-    data = get_data_by_url(url_input, output_type)
+    data: (Stream | None) = get_data_with_url(url_input, output_type)
     if data is None:
         print("Conversion of url >{}< didn't work".format(url_input))
-        return
-    filename = "{}{}".format(data.default_filename.split(".")[0], file_endings[output_type])
+        return False
+    filename: str = "{}{}".format(data.default_filename.split(".")[0], file_endings[output_type])
+    filename = filename.replace(" ", "_")
     data.download(output_path="results/", filename=filename)
     print("SUCCESS")
 
 
 if __name__ == '__main__':
-    url_input = input("Enter the urls separated by comma (url1, url2, ...): ")
-    urls = url_input.split(",")
-    output_type_input = input("Choose between the output types {}, {} (substrings are enough): ".format(OutputType.VIDEO.value, OutputType.AUDIO.value))
-    output_type = parse_output_type_input(output_type_input)
+    url_input: str = input("Enter the urls separated by comma (url1, url2, ...): ")
+    urls: list[str] = url_input.split(",")
+    output_type_str: str = input("Choose between the output types {}, {} (substrings are enough): ".format(OutputType.VIDEO.value, OutputType.AUDIO.value))
+    output_type: OutputType = output_type_from_str(output_type_str)
     print("{} selected".format(output_type.value))
     for url in urls:
-        url_wo_whitespace = url.replace(" ", "")
+        url_wo_whitespace: str = url.replace(" ", "")
         convert_video(url_wo_whitespace, output_type)
 
