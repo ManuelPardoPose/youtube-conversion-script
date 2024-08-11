@@ -1,17 +1,12 @@
 from enum import Enum
-from pytube import YouTube, Stream
-from pytube.exceptions import RegexMatchError
-
-# remove patch below if pytube fixed the bug
-from pytube import cipher
-from patch import get_throttling_function_name as patched_func
-cipher.get_throttling_function_name = patched_func
+from pytubefix import YouTube, Stream
+from pytubefix.exceptions import RegexMatchError
 
 # link for testing
 # https://youtu.be/3c-176VE_qQ?si=v0sCwEcDTJlvGim7
 
 # workaround age restricted
-from pytube.innertube import _default_clients
+from pytubefix.innertube import _default_clients
 _default_clients["ANDROID_MUSIC"] = _default_clients["ANDROID_CREATOR"]
 
 
